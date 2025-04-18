@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <title>SPARQL Query Interface</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="https://cdn.jsdelivr.net/gh/Igor-Vladyka/leaflet.motion@latest/dist/leaflet.motion.min.js"></script>
+
+  <style>
+    #map {
+      width: 100%;
+      height: 600px;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Wikidata SPARQL Query</h1>
+  <form id="query-form">
+    <textarea id="sparql" rows="10" cols="80" placeholder="Enter SPARQL query here..."></textarea><br>
+    <button type="submit">Run Query</button>
+  </form>
+
+  <pre id="results"></pre>
+  <div id="map"></div>
+
+ 
+  <script src="https://cdn.jsdelivr.net/gh/bbecquet/Leaflet.PolylineDecorator@master/dist/leaflet.polylineDecorator.min.js"></script>
+
+  <script src="/static/script.js"></script>
+
+</body>
+
+</html>
