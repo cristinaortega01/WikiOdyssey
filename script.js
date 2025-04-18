@@ -12,14 +12,26 @@ let osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
 
 var scale = L.control.scale().addTo(map);
 
-let currentMotionPolyline = null;
-let currentDestinationMarker = null;
-let currentArrowDecorator = null;
+let motionPolylines = [];
+let destinationMarkers = [];
+let arrowDecorators = [];
 
 // Handle the form submission for SPARQL query
 document.getElementById("query-form").addEventListener("submit", async function (e) {
     e.preventDefault();
     const sparql = document.getElementById("sparql").value;
+    const sortOption = document.getElementById("sort-options").value;
+
+    let sortedSparql = sparql;
+    if (sortOption === 'ascending'){
+        sortedSparql += "ORDER BY ?label";
+    } else if (sortOption === 'descending'){
+        sortedSparql += "ORDER BY DESC(?label)";
+    }
+    // No sorting for the "None" option (empty value)
+
+
+
     const res = await fetch("/query", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -66,6 +78,34 @@ function filterDuplicatesByItem(data) {
     return uniqueItems;
 }
 
+function createOriginMarker(coords) {
+    return L.marker([coords.lat, coords.lon])
+        .bindPopup("Origin")
+        .addTo(map);
+}
+
+function createDestinationMarker(coords) {
+    return L.marker([coords.lat, coords.lon])
+        .bindPopup("Destination")
+        .addTo(map);
+}
+
+function createMotionPolyline (start, end){
+    return L.motion.polyline(
+        [
+            [start.lat, start.lon],
+            [end.lat, end.lon]
+        ],
+        {
+            color: 'red',
+            weight: 4,
+            opacity: 0.8,
+            duration: 3000,
+            easing: L.Motion.Ease.easeInOut
+        }
+    ).addTo(map);
+}
+
 function animateRoute(originCoordObj, currentCoordObj) {
 
     var originCoords = extractCoordinates(originCoordObj)
@@ -74,27 +114,13 @@ function animateRoute(originCoordObj, currentCoordObj) {
     if (!originCoords || !currentCoords) return;
 
     //We only mark origin
-    const originMarker = L.marker([originCoords.lat, originCoords.lon])
-        .bindPopup("Origin")
-        .addTo(map);
+    const originMarker = createOriginMarker(originCoords);
+
+    let currentArrowDecorator;
 
     originMarker.on("click", function () {
-        removeRouteAndDestination();
-
-        currentMotionPolyline = L.motion.polyline(
-            [
-                [originCoords.lat, originCoords.lon],
-                [currentCoords.lat, currentCoords.lon]
-            ],
-            {
-                color: 'red',               // Color for the animated line
-                weight: 4,                  // Line thickness
-                opacity: 0.8,
-                duration: 3000,             // Duration in milliseconds
-                easing: L.Motion.Ease.easeInOut  // Easing function for smooth transition
-            }
-        ).addTo(map);
-
+        const route = L.layerGroup().addTo(map);
+        const currentMotionPolyline = createMotionPolyline(originCoords, currentCoords).addTo(route);
 
         setTimeout(() => {
             const latlngs = currentMotionPolyline.getLatLngs();
@@ -112,18 +138,17 @@ function animateRoute(originCoordObj, currentCoordObj) {
                             })
                         }
                     ]
-                }).addTo(map);
+                }).addTo(route);
             }
         }, 10);
 
         currentMotionPolyline.motionStart();
 
-        currentDestinationMarker = L.marker([currentCoords.lat, currentCoords.lon])
-            .bindPopup("Destination")
-            .addTo(map);
-
-        currentDestinationMarker.on("click", removeRouteAndDestination);
-        currentMotionPolyline.on("click", removeRouteAndDestination);
+        currentDestinationMarker = createDestinationMarker(currentCoords).addTo(route);
+      
+        currentDestinationMarker.on("click", map.removeLayer(route));
+        currentMotionPolyline.on("click",  map.removeLayer(route));
+        currentArrowDecorator.on("click", map.removeLayer(route));
     });
 }
 
@@ -135,17 +160,3 @@ function addRoute(data) {
     });
 }
 
-function removeRouteAndDestination() {
-    if (currentMotionPolyline) {
-        map.removeLayer(currentMotionPolyline);
-        currentMotionPolyline = null;
-    }
-    if (currentDestinationMarker) {
-        map.removeLayer(currentDestinationMarker);
-        currentDestinationMarker = null;
-    }
-    if (currentArrowDecorator) {
-        map.removeLayer(currentArrowDecorator);
-        currentArrowDecorator = null;
-    }
-}
