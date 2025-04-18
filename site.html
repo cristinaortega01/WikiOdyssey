@@ -22,15 +22,18 @@
   <h1>Wikidata SPARQL Query</h1>
   <form id="query-form">
     <textarea id="sparql" rows="10" cols="80" placeholder="Enter SPARQL query here..."></textarea><br>
+    <select id="sort-options">
+      <option value="none">None</option>
+      <option value="ascending">Sort by ascending order</option>
+      <option value="descending">Sort by descending order</option>
+  </select><br>
     <button type="submit">Run Query</button>
   </form>
 
   <pre id="results"></pre>
   <div id="map"></div>
-
  
   <script src="https://cdn.jsdelivr.net/gh/bbecquet/Leaflet.PolylineDecorator@master/dist/leaflet.polylineDecorator.min.js"></script>
-
   <script src="/static/script.js"></script>
 
 </body>
