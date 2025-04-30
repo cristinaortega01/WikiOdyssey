@@ -16,13 +16,109 @@ let motionPolylines = [];
 let destinationMarkers = [];
 let arrowDecorators = [];
 
+async function getWikidataId(searchTerm){
+    const itemSearch = encodeURIComponent(searchTerm);
+    const url = `https://www.wikidata.org/w/api.php?action=wbsearchentities&search=${itemSearch}&language=en&format=json&origin=*`;
+    try{
+        const response = await fetch(url);
+        const dataToJson = await response.json();
+
+        if (dataToJson.search && dataToJson.search.length > 0){ //from json answer structure
+            const datalist = document.getElementById("wikidata-suggestions");
+            datalist.innerHTML = ""; //clear previous suggestions
+
+            dataToJson.search.forEach(item => { //for each item returned, we create an option element
+                const option = document.createElement("option");
+                option.value = item.label // set the visible text for the option
+                option.setAttribute("data-id",item.id);
+                datalist.append(option);
+            });
+            return dataToJson.search[0].id;
+
+        }else {
+            console.log("No results found for:", searchTerm);
+            return null;
+        }
+    }catch(error){
+        console.error("Error fetching from Wikidata:", error);
+        return null
+    }
+
+}
+
+document.getElementById("item-wikidata").addEventListener("input", function() {
+    const searchTerm = this.value.trim();
+
+    // Fetch suggestions only if the search term is longer than 2 characters
+    if (searchTerm.length > 2) {
+        getWikidataId(searchTerm);
+    } else {
+        document.getElementById("wikidata-suggestions").innerHTML = ""; // Clear suggestions if the search term is short
+    }
+});
+
 // Handle the form submission for SPARQL query
+class SPARQLQueryDispatcher{
+    constructor( endpoint ) {
+		this.endpoint = endpoint;
+	}
+
+	query( sparqlQuery ) {
+		const fullUrl = this.endpoint + '?query=' + encodeURIComponent( sparqlQuery );
+		const headers = { 'Accept': 'application/sparql-results+json' };
+
+		return fetch( fullUrl, { headers } ).then( body => body.json() );
+	}
+}
+
+const endpointUrl = 'https://query.wikidata.org/sparql';
+
 document.getElementById("query-form").addEventListener("submit", async function (e) {
     e.preventDefault();
-    const sparql = document.getElementById("sparql").value;
+    const searchTerm = document.getElementById("item-wikidata").value.trim();
     const sortOption = document.getElementById("sort-options").value;
+    const dataList = document.getElementById("wikidata-suggestions");
+    const selectedOption = Array.from(dataList.options).find(option => option.value === searchTerm);
 
-    let sortedSparql = sparql;
+    if (selectedOption) {
+        const termId = selectedOption.getAttribute("data-id");
+
+        const sparqlQuery = buildQuery(termId, sortOption);
+        //fetch data
+        const res = await fetch("/query", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ query: sparqlQuery })
+        });
+
+        const data = await res.json();
+        console.log(data)
+        document.getElementById("results").textContent = JSON.stringify(data, null, 2);
+        clearMap();
+        addRoute(data);
+    }else{
+        alert("Please select a valid Wikidata item from the suggestions.");
+    }
+});
+
+function buildQuery(termId, sortOption){
+    let sparqlQuery= `SELECT ?item ?itemLabel 
+       ?currentLocation ?currentLocationLabel ?currentLocationCoordinates
+       ?origin ?originLabel ?originCoordinates
+    WHERE {
+        ?item wdt:P31 wd:${termId};        
+                wdt:P276 ?currentLocation; 
+                wdt:P495 ?origin.          
+        ?currentLocation wdt:P625 ?currentLocationCoordinates. 
+        ?origin wdt:P625 ?originCoordinates. 
+
+        SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
+    }`
+    ;
+
+    sparqlQuery += `LIMIT 5`
+
+    let sortedSparql = sparqlQuery;
     if (sortOption === 'ascending'){
         sortedSparql += "ORDER BY ?label";
     } else if (sortOption === 'descending'){
@@ -30,22 +126,20 @@ document.getElementById("query-form").addEventListener("submit", async function 
     }
     // No sorting for the "None" option (empty value)
 
+    return sparqlQuery;
+}
 
+function clearMap () {
+    map.eachLayer(function (layer) {
+        const isBaseMap = layer == openStreetMapLayer;
+        const isScaleBar = layer == scale;
 
-    const res = await fetch("/query", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query: sparql })
+        if (!isBaseMap && !isScaleBar) {
+            map.removeLayer(layer);
+        }
     });
-    const data = await res.json();
 
-    console.log(data)
-
-    document.getElementById("results").textContent = JSON.stringify(data, null, 2);
-    addRoute(data);
-
-});
-
+}
 
 function extractCoordinates(coordObject) {
     var coordString = coordObject.value;
@@ -139,16 +233,20 @@ function animateRoute(originCoordObj, currentCoordObj) {
                         }
                     ]
                 }).addTo(route);
+                currentArrowDecorator.on("click", removeRoute);
             }
         }, 10);
 
         currentMotionPolyline.motionStart();
 
         currentDestinationMarker = createDestinationMarker(currentCoords).addTo(route);
+
+        function removeRoute() {
+            map.removeLayer(route)
+        }
       
-        currentDestinationMarker.on("click", map.removeLayer(route));
-        currentMotionPolyline.on("click",  map.removeLayer(route));
-        currentArrowDecorator.on("click", map.removeLayer(route));
+        currentDestinationMarker.on("click", removeRoute);
+        currentMotionPolyline.on("click",  removeRoute);
     });
 }
 
