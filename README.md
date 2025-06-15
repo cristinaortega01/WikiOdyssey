@@ -19,7 +19,7 @@ FEATURES
 
 FILE STRUCTURE
 
-app.py - Flask backend to serve the HTML and proxy SPARQL queries to Wikidata
+app.py - Flask backend to serve the static files and proxy SPARQL queries to Wikidata
 
 site.html – Main HTML layout and UI.
 
