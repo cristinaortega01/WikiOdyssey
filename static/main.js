@@ -75,7 +75,6 @@ async function handleFormSubmission(event) {
         
     } catch (error) {
         console.error('Query failed:', error);
-        showAlert('Something went wrong. Please try again.');
     }
 }
 
