@@ -32,4 +32,6 @@ style.css – Contains styles for the layout and components.
 
 VIDEO DEMO
 
-<video src="https://github.com/user-attachments/assets/862bf829-e5d8-4261-94bd-6bf4614ae874" width="352" height="720"></video>
+https://github.com/user-attachments/assets/a82881c8-7f86-4f95-a582-3d9880d03fa3
+
+
