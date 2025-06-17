@@ -4,9 +4,9 @@ WikiOdyssey is a web application that allows users to visualise the movement of 
 
 FEATURES
 
-🌍 Visualises data from Wikidata
+🌍 Visualises data from Wikidata.
 
-🧭 No manual querying — just start typing and select from available suggestions.
+🧭 No manual querying, just start typing and select from available suggestions.
 
 🎯 Filtering and sorting options for results displayed.
 
@@ -21,7 +21,7 @@ FILE STRUCTURE
 
 app.py - Flask backend to serve the static files and proxy SPARQL queries to Wikidata
 
-site.html – Main HTML layout and UI.
+site.html – Main HTML layout.
 
 main.js – Handles user interactions, search, and result display.
 
@@ -29,3 +29,7 @@ map.js – Map initialisation, route drawing, and interactivity.
 
 style.css – Contains styles for the layout and components.
 
+
+VIDEO DEMO
+
+<video src="https://github.com/user-attachments/assets/862bf829-e5d8-4261-94bd-6bf4614ae874" width="352" height="720"></video>
