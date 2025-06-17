@@ -35,3 +35,23 @@ style.css – Contains styles for the layout and components.
 https://github.com/user-attachments/assets/a82881c8-7f86-4f95-a582-3d9880d03fa3
 
 
+## INSTALLATION
+
+1. Clone the repository
+```
+git clone https://github.com/yourusername/wikiodyssey.git
+cd wikiodyssey
+```
+
+2. Start the Flask server
+```
+python app.py
+```
+
+3. Open your browser and visit
+```
+http://localhost:5000/
+```
+
+
+
